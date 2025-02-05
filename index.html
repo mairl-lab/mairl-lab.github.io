@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Salis AI agent</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+    body {
+      background: white;
+      min-height: 100vh;
+      padding-bottom: 90px;
+    }
+    .header {
+      background: black;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    .logo {
+      height: 40px;
+      width: 40px;
+    }
+    .header-title {
+      color: white;
+      font-size: 1.5rem;
+      margin-left: auto;
+    }
+    .main-content {
+      background: #d9dad8;
+      margin: 2rem auto;
+      padding: 2rem;
+      border: 2px solid black;
+      border-radius: 8px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+      max-width: 800px;
+    }
+    .footer {
+      background: #666;
+      padding: 1rem;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      transition: transform 0.3s ease-in-out;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 2rem;
+      min-height: 60px;
+    }
+    .footer.hidden {
+      transform: translateY(100%);
+    }
+    .footer-icon {
+      color: white;
+      font-size: 24px;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+    .footer-icon:hover {
+      color: #d9dad8;
+      transform: scale(1.2);
+    }
+    .chat-container {
+      background: white;
+      border: 2px solid black;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 2rem;
+      min-height: 400px;
+      display: flex;
+      flex-direction: column;
+    }
+    .chat-messages {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .message {
+      max-width: 80%;
+      padding: 0.8rem;
+      border-radius: 1rem;
+      word-break: break-word;
+    }
+    .user-message {
+      background: #007bff;
+      color: white;
+      align-self: flex-end;
+    }
+    .bot-message {
+      background: #e9ecef;
+      color: black;
+      align-self: flex-start;
+    }
+    .chat-input {
+      border: 2px solid black;
+      border-radius: 4px;
+      padding: 0.8rem;
+      margin-top: 1rem;
+      width: 100%;
+    }
+    .features-title {
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      align-items: start;
+    }
+    .feature-card {
+      background: white;
+      padding: 1.5rem;
+      border: 2px solid black;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .feature-details {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+      color: #666;
+    }
+    @media (max-width: 768px) {
+      body {
+        padding-bottom: 120px;
+      }
+      .main-content {
+        margin: 1rem;
+        padding: 1rem;
+      }
+      .footer {
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        padding: 1rem;
+        min-height: auto;
+      }
+      .footer-icon {
+        font-size: 20px;
+        margin: 0 8px;
+      }
+    }
+    @media (max-width: 480px) {
+      .footer {
+        gap: 1rem;
+        padding: 12px;
+      }
+      body {
+        padding-bottom: 100px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <img src="logo.png" alt="Salis.io Logo" class="logo" />
+    <div class="header-title">Salis.live</div>
+  </header>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="chat-container">
+      <div class="chat-messages" id="chatMessages">
+        <div class="message bot-message">
+          Hello! I'm Salis AI. Ask me about crypto security features.
+        </div>
+      </div>
+      <input type="text" class="chat-input" placeholder="Type your message..." id="userInput" />
+    </div>
+
+    <h2 class="features-title">Implemented Features</h2>
+    <div class="features-grid" id="featuresGrid"></div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <a href="https://x.com/Salis_AI" class="footer-icon" target="_blank">
+      <i class="fa-brands fa-twitter"></i>
+    </a>
+    <a href="https://www.pump.fun" class="footer-icon" target="_blank">
+      <i class="fa-solid fa-money-bill"></i>
+    </a>
+    <a href="https://dexscreener.com" class="footer-icon" target="_blank">
+      <i class="fa-solid fa-chart-simple"></i>
+    </a>
+  </footer>
+
+  <!-- JavaScript -->
+  <script>
+    // Define the backend URL
+    // IMPORTANT: Update this URL to match your deployment (consider using HTTPS in production)
+    const BACKEND_URL = "http://13.48.147.32:3000"; 
+
+    // Footer hide/show behavior on scroll
+    let lastScroll = 0;
+    const footer = document.querySelector('.footer');
+    const scrollHandler = throttle(() => {
+      const currentScroll = window.pageYOffset;
+      if (currentScroll > lastScroll && currentScroll > 100) {
+        footer.classList.add('hidden');
+      } else {
+        footer.classList.remove('hidden');
+      }
+      lastScroll = currentScroll;
+    }, 100);
+    window.addEventListener('scroll', scrollHandler);
+    function throttle(func, limit) {
+      let lastFunc;
+      let lastRan;
+      return function () {
+        const context = this;
+        const args = arguments;
+        if (!lastRan) {
+          func.apply(context, args);
+          lastRan = Date.now();
+        } else {
+          clearTimeout(lastFunc);
+          lastFunc = setTimeout(() => {
+            if (Date.now() - lastRan >= limit) {
+              func.apply(context, args);
+              lastRan = Date.now();
+            }
+          }, limit - (Date.now() - lastRan));
+        }
+      };
+    }
+
+    // Feature Cards Implementation
+    const FEATURES = Object.freeze([
+      {
+        id: 1,
+        title: '1️⃣ Smart Contract Audits',
+        short: 'Deep contract analysis',
+        details:
+          'Makes you aware when a contract has major underlying risk factors, for example, mint authority, unlocked liquidity pool, and honeypot.'
+      },
+      {
+        id: 2,
+        title: '2️⃣ Liquidity Monitoring',
+        short: 'Real-time pool tracking',
+        details:
+          '24/7 surveillance of liquidity across DEXs with instant alerts for large withdrawals or suspicious movements.'
+      },
+      {
+        id: 3,
+        title: '3️⃣ Risk Scoring',
+        short: 'Project safety ratings',
+        details:
+          'Dynamic scoring algorithm evaluating contract quality, team wallets, and community trust factors.'
+      },
+      {
+        id: 4,
+        title: '4️⃣ Rug Pull Prediction',
+        short: 'Scam detection',
+        details:
+          'Through a dynamic scoring algorithm evaluating chart movements, Salis is able to identify bundles of buy transactions happening in the distance of a few blocks, analyze social media interactions (on Telegram and X), and analyze holder distribution patterns. Thus, providing the user a detailed rugpull prediction.'
+      }
+    ]);
+
+    class FeatureCard {
+      constructor(feature) {
+        this.feature = feature;
+        this.element = this.createCard();
+        this.detailsElement = this.element.querySelector('.feature-details');
+        this.isOpen = false;
+        this.addEventListeners();
+        FeatureCard.instances.set(feature.id, this);
+      }
+      createCard() {
+        const card = document.createElement('div');
+        card.className = 'feature-card';
+        card.innerHTML = `
+          <h3>${this.feature.title}</h3>
+          <p>${this.feature.short}</p>
+          <div class="feature-details">${this.feature.details}</div>
+        `;
+        return card;
+      }
+      addEventListeners() {
+        this.element.addEventListener('click', () => this.toggle());
+      }
+      toggle() {
+        this.isOpen ? this.close() : this.open();
+      }
+      open() {
+        FeatureCard.instances.forEach(instance => {
+          if (instance !== this) instance.close();
+        });
+        this.detailsElement.style.maxHeight = 'none';
+        const naturalHeight = this.detailsElement.scrollHeight;
+        this.detailsElement.style.maxHeight = '0';
+        requestAnimationFrame(() => {
+          this.element.classList.add('active');
+          this.detailsElement.style.maxHeight = `${naturalHeight}px`;
+          this.isOpen = true;
+        });
+      }
+      close() {
+        this.element.classList.remove('active');
+        this.detailsElement.style.maxHeight = '0';
+        this.isOpen = false;
+      }
+    }
+    FeatureCard.instances = new Map();
+
+    // Chat system implementation
+    class ChatController {
+      constructor() {
+        this.input = document.getElementById('userInput');
+        this.messagesContainer = document.getElementById('chatMessages');
+        this.initialize();
+      }
+      initialize() {
+        // Listen for the Enter key on the chat input
+        this.input.addEventListener('keypress', (e) => this.handleInput(e));
+      }
+      async handleInput(e) {
+        if (e.key === 'Enter' && this.input.value.trim()) {
+          const userMessage = this.input.value;
+          this.addUserMessage(userMessage);
+          this.input.value = '';
+          this.scrollToBottom();
+          // Send the message to the backend for processing by your custom AI
+          await this.getBotResponse(userMessage);
+        }
+      }
+      addUserMessage(text) {
+        const div = document.createElement('div');
+        div.className = 'message user-message';
+        div.textContent = text;
+        this.messagesContainer.appendChild(div);
+      }
+      // Create a bot message element and return it so its content can be updated.
+      addBotMessage(text) {
+        const div = document.createElement('div');
+        div.className = 'message bot-message';
+        div.textContent = text;
+        this.messagesContainer.appendChild(div);
+        return div;
+      }
+      async getBotResponse(message) {
+        // Display a temporary "loading" message
+        const loadingMessage = this.addBotMessage('...');
+        try {
+          // POST the user's message to your backend endpoint
+          const response = await fetch(BACKEND_URL + '/chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message: message })
+          });
+          if (!response.ok) {
+            // In case of non-200 status, throw an error to be caught below
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          const data = await response.json();
+          // Replace the loading message with the reply from your backend AI
+          loadingMessage.textContent = data.reply;
+        } catch (error) {
+          // If there is an error, update the message to inform the user
+          loadingMessage.textContent = 'Error: ' + error.message;
+        }
+        this.scrollToBottom();
+      }
+      scrollToBottom() {
+        this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+      }
+    }
+
+    // Initialize the application
+    function initApp() {
+      const featuresGrid = document.getElementById('featuresGrid');
+      featuresGrid.innerHTML = '';
+      FEATURES.forEach(feature => {
+        const card = new FeatureCard(feature);
+        featuresGrid.appendChild(card.element);
+      });
+      new ChatController();
+    }
+
+    initApp();
+  </script>
+</body>
+</html>
