@@ -106,12 +106,32 @@
       color: black;
       align-self: flex-start;
     }
+    .chat-input-container {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
     .chat-input {
+      flex-grow: 1;
       border: 2px solid black;
       border-radius: 4px;
       padding: 0.8rem;
-      margin-top: 1rem;
-      width: 100%;
+    }
+    .send-button {
+      background: #007bff;
+      color: white;
+      border: 2px solid black;
+      border-radius: 4px;
+      padding: 0.8rem 1.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .send-button:hover {
+      background: #0056b3;
+      transform: scale(1.05);
+    }
+    .send-button:active {
+      transform: scale(0.95);
     }
     .features-title {
       font-size: 2rem;
@@ -184,7 +204,12 @@
           Hello! I'm Salis AI. Ask me about crypto security features.
         </div>
       </div>
-      <input type="text" class="chat-input" placeholder="Type your message..." id="userInput" />
+      <div class="chat-input-container">
+        <input type="text" class="chat-input" placeholder="Type your message..." id="userInput" />
+        <button class="send-button" id="sendButton">
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </div>
     </div>
 
     <h2 class="features-title">Implemented Features</h2>
@@ -206,11 +231,9 @@
 
   <!-- JavaScript -->
   <script>
-    // Define the backend URL
-    // IMPORTANT: Update this URL to match your deployment (consider using HTTPS in production)
-    const BACKEND_URL = "http://13.48.147.32:3000"; 
+    const BACKEND_URL = "http://13.48.147.32:3000";
 
-    // Footer hide/show behavior on scroll
+    // Footer hide/show behavior
     let lastScroll = 0;
     const footer = document.querySelector('.footer');
     const scrollHandler = throttle(() => {
@@ -244,7 +267,7 @@
       };
     }
 
-    // Feature Cards Implementation
+    // Feature Cards
     const FEATURES = Object.freeze([
       {
         id: 1,
@@ -258,7 +281,7 @@
         title: '2️⃣ Liquidity Monitoring',
         short: 'Real-time pool tracking',
         details:
-          '24/7 surveillance of liquidity across DEXs with instant alerts for large withdrawals or suspicious movements.'
+          'Costant surveillance of liquidity across DEXs with instant alerts for large withdrawals or suspicious sell patterns.'
       },
       {
         id: 3,
@@ -322,24 +345,29 @@
     }
     FeatureCard.instances = new Map();
 
-    // Chat system implementation
+    // Chat system
     class ChatController {
       constructor() {
         this.input = document.getElementById('userInput');
+        this.sendButton = document.getElementById('sendButton');
         this.messagesContainer = document.getElementById('chatMessages');
         this.initialize();
       }
       initialize() {
-        // Listen for the Enter key on the chat input
         this.input.addEventListener('keypress', (e) => this.handleInput(e));
+        this.sendButton.addEventListener('click', () => this.handleSend());
       }
-      async handleInput(e) {
-        if (e.key === 'Enter' && this.input.value.trim()) {
+      handleInput(e) {
+        if (e.key === 'Enter') {
+          this.handleSend();
+        }
+      }
+      async handleSend() {
+        if (this.input.value.trim()) {
           const userMessage = this.input.value;
           this.addUserMessage(userMessage);
           this.input.value = '';
           this.scrollToBottom();
-          // Send the message to the backend for processing by your custom AI
           await this.getBotResponse(userMessage);
         }
       }
@@ -349,7 +377,6 @@
         div.textContent = text;
         this.messagesContainer.appendChild(div);
       }
-      // Create a bot message element and return it so its content can be updated.
       addBotMessage(text) {
         const div = document.createElement('div');
         div.className = 'message bot-message';
@@ -358,10 +385,8 @@
         return div;
       }
       async getBotResponse(message) {
-        // Display a temporary "loading" message
         const loadingMessage = this.addBotMessage('...');
         try {
-          // POST the user's message to your backend endpoint
           const response = await fetch(BACKEND_URL + '/chat', {
             method: 'POST',
             headers: {
@@ -370,14 +395,11 @@
             body: JSON.stringify({ message: message })
           });
           if (!response.ok) {
-            // In case of non-200 status, throw an error to be caught below
             throw new Error(`HTTP error! Status: ${response.status}`);
           }
           const data = await response.json();
-          // Replace the loading message with the reply from your backend AI
           loadingMessage.textContent = data.reply;
         } catch (error) {
-          // If there is an error, update the message to inform the user
           loadingMessage.textContent = 'Error: ' + error.message;
         }
         this.scrollToBottom();
@@ -387,7 +409,6 @@
       }
     }
 
-    // Initialize the application
     function initApp() {
       const featuresGrid = document.getElementById('featuresGrid');
       featuresGrid.innerHTML = '';
