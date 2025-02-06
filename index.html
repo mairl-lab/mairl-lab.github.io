@@ -6,6 +6,7 @@
   <title>Salis AI agent</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
+    /* [Your CSS styles remain unchanged] */
     * {
       margin: 0;
       padding: 0;
@@ -231,7 +232,8 @@
 
   <!-- JavaScript -->
   <script>
-    const BACKEND_URL = "https://api.salis.live";
+    // Set your backend URL (ensure the domain/port matches your EC2/nginx settings)
+    const BACKEND_URL = "http://your_ec2_public_ip_or_domain"; 
 
     // Footer hide/show behavior
     let lastScroll = 0;
@@ -281,7 +283,7 @@
         title: '2️⃣ Liquidity Monitoring',
         short: 'Real-time pool tracking',
         details:
-          'Costant surveillance of liquidity across DEXs with instant alerts for large withdrawals or suspicious sell patterns.'
+          'Constant surveillance of liquidity across DEXs with instant alerts for large withdrawals or suspicious sell patterns.'
       },
       {
         id: 3,
@@ -295,7 +297,7 @@
         title: '4️⃣ Rug Pull Prediction',
         short: 'Scam detection',
         details:
-          'Through a dynamic scoring algorithm evaluating chart movements, Salis is able to identify bundles of buy transactions happening in the distance of a few blocks, analyze social media interactions (on Telegram and X), and analyze holder distribution patterns. Thus, providing the user a detailed rugpull prediction.'
+          'Through a dynamic scoring algorithm evaluating chart movements, Salis is able to identify bundles of buy transactions happening within a few blocks, analyze social media interactions (on Telegram and X), and analyze holder distribution patterns. Thus, providing the user a detailed rugpull prediction.'
       }
     ]);
 
@@ -311,6 +313,7 @@
       createCard() {
         const card = document.createElement('div');
         card.className = 'feature-card';
+        // Use a template literal for the innerHTML
         card.innerHTML = `
           <h3>${this.feature.title}</h3>
           <p>${this.feature.short}</p>
@@ -325,9 +328,11 @@
         this.isOpen ? this.close() : this.open();
       }
       open() {
+        // Close any other open cards
         FeatureCard.instances.forEach(instance => {
           if (instance !== this) instance.close();
         });
+        // Get the natural height, then animate open
         this.detailsElement.style.maxHeight = 'none';
         const naturalHeight = this.detailsElement.scrollHeight;
         this.detailsElement.style.maxHeight = '0';
